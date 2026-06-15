@@ -1,0 +1,119 @@
+@use '@/styles/variables.scss' as *;
+
+.checkInItem {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.timeRow {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.time {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+}
+
+.statusTag {
+  padding: 4rpx 16rpx;
+  border-radius: $radius-round;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.statusPending {
+  background: rgba(245, 158, 11, 0.1);
+  color: $color-warning;
+}
+
+.statusTaken {
+  background: rgba(16, 185, 129, 0.1);
+  color: $color-success;
+}
+
+.statusMissed {
+  background: rgba(239, 68, 68, 0.1);
+  color: $color-error;
+}
+
+.statusSupplemented {
+  background: rgba(59, 130, 246, 0.1);
+  color: $color-info;
+}
+
+.content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.medicineInfo {
+  flex: 1;
+}
+
+.medicineName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.memberAndDosage {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-top: $spacing-xs;
+}
+
+.actualTime {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-top: $spacing-xs;
+}
+
+.actions {
+  display: flex;
+  gap: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.btn {
+  @include button-reset;
+  height: $button-height-sm;
+  padding: 0 $spacing-lg;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  white-space: nowrap;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+  }
+}
+
+.btnPrimary {
+  background: $color-primary;
+  color: $color-text-white;
+}
+
+.btnSecondary {
+  background: $color-bg-hover;
+  color: $color-text-secondary;
+}
+
+.btnDanger {
+  background: rgba(239, 68, 68, 0.1);
+  color: $color-error;
+}

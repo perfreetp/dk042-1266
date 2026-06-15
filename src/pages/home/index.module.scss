@@ -1,0 +1,114 @@
+@use '@/styles/variables.scss' as *;
+
+.container {
+  padding: $spacing-lg $page-padding $spacing-xl;
+  min-height: 100vh;
+}
+
+.header {
+  margin-bottom: $spacing-lg;
+}
+
+.greeting {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.title {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin-top: $spacing-xs;
+}
+
+.statsRow {
+  display: flex;
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-md;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.seeMore {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-normal;
+}
+
+.quickActions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.actionCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg $spacing-sm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: $shadow-card;
+
+  &:active {
+    background: $color-bg-hover;
+    transform: scale(0.98);
+    transition: all $transition-base;
+  }
+}
+
+.actionIcon {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: $radius-md;
+  background: $color-primary-bg;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 36rpx;
+  margin-bottom: $spacing-sm;
+}
+
+.actionIconWarn {
+  background: rgba(245, 158, 11, 0.1);
+}
+
+.actionIconDanger {
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.actionIconInfo {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.actionLabel {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  text-align: center;
+}
+
+.todayList {
+  margin-bottom: $spacing-lg;
+}
+
+.emptyState {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-xl;
+  text-align: center;
+  box-shadow: $shadow-card;
+}
+
+.emptyText {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}

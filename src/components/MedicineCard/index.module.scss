@@ -1,0 +1,75 @@
+@use '@/styles/variables.scss' as *;
+
+.medicineCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+
+  &:active {
+    background: $color-bg-hover;
+    transition: all $transition-base;
+  }
+}
+
+.image {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: $radius-md;
+  background: $color-primary-bg;
+  flex-shrink: 0;
+  @include flex-center;
+}
+
+.info {
+  flex: 1;
+  min-width: 0;
+}
+
+.name {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  @include text-ellipsis;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+}
+
+.metaItem {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.tags {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+  flex-wrap: wrap;
+}
+
+.tag {
+  padding: 4rpx 12rpx;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  background: $color-bg-tag;
+  color: $color-primary-dark;
+}
+
+.tagWarning {
+  background: rgba(245, 158, 11, 0.1);
+  color: $color-warning;
+}
+
+.tagDanger {
+  background: rgba(239, 68, 68, 0.1);
+  color: $color-error;
+}

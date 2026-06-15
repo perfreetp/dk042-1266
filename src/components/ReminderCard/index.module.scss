@@ -1,0 +1,82 @@
+@use '@/styles/variables.scss' as *;
+
+.reminderCard {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-card;
+  border-left: 6rpx solid $color-info;
+
+  &:active {
+    background: $color-bg-hover;
+    transition: all $transition-base;
+  }
+}
+
+.warning {
+  border-left-color: $color-warning;
+}
+
+.danger {
+  border-left-color: $color-error;
+}
+
+.info {
+  border-left-color: $color-info;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.title {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.levelTag {
+  font-size: $font-size-xs;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-sm;
+  font-weight: $font-weight-medium;
+}
+
+.levelWarning {
+  background: rgba(245, 158, 11, 0.1);
+  color: $color-warning;
+}
+
+.levelDanger {
+  background: rgba(239, 68, 68, 0.1);
+  color: $color-error;
+}
+
+.levelInfo {
+  background: rgba(59, 130, 246, 0.1);
+  color: $color-info;
+}
+
+.unreadDot {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: $radius-round;
+  background: $color-error;
+  margin-left: $spacing-sm;
+}
+
+.content {
+  font-size: $font-size-md;
+  color: $color-text-secondary;
+  line-height: $line-height-normal;
+}
+
+.date {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  margin-top: $spacing-sm;
+}
