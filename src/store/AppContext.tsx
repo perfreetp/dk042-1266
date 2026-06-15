@@ -1,9 +1,161 @@
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import Taro from '@tarojs/taro';
 import { Member, Medicine, CheckInRecord, ReminderItem, DailyStat } from '@/types';
 import { mockMembers } from '@/data/members';
 import { mockMedicines as medicinesData } from '@/data/medicines';
 import { mockCheckInRecords, mockReminders } from '@/data/records';
-import { getCurrentDate, generateId, getCurrentTime } from '@/utils';
+import { getCurrentDate, generateId, getCurrentTime, getExpireStatus } from '@/utils';
+
+const STORAGE_KEYS = {
+  members: 'medicine_app_members',
+  medicines: 'medicine_app_medicines',
+  checkInRecords: 'medicine_app_checkin_records',
+  reminders: 'medicine_app_reminders',
+  initialized: 'medicine_app_initialized'
+};
+
+function loadStorage<T>(key: string, fallback: T): T {
+  try {
+    const raw = Taro.getStorageSync(key);
+    if (raw) return JSON.parse(raw) as T;
+  } catch (e) {
+    console.error(`[AppContext] 读取 ${key} 失败:`, e);
+  }
+  return fallback;
+}
+
+function saveStorage<T>(key: string, data: T): void {
+  try {
+    Taro.setStorageSync(key, JSON.stringify(data));
+  } catch (e) {
+    console.error(`[AppContext] 保存 ${key} 失败:`, e);
+  }
+}
+
+function getInitialState(): {
+  members: Member[];
+  medicines: Medicine[];
+  checkInRecords: CheckInRecord[];
+  reminders: ReminderItem[];
+} {
+  const initialized = Taro.getStorageSync(STORAGE_KEYS.initialized);
+  if (initialized) {
+    return {
+      members: loadStorage(STORAGE_KEYS.members, mockMembers),
+      medicines: loadStorage(STORAGE_KEYS.medicines, medicinesData),
+      checkInRecords: loadStorage(STORAGE_KEYS.checkInRecords, mockCheckInRecords),
+      reminders: loadStorage(STORAGE_KEYS.reminders, mockReminders),
+    };
+  }
+
+  Taro.setStorageSync(STORAGE_KEYS.initialized, 'true');
+  return {
+    members: mockMembers,
+    medicines: medicinesData,
+    checkInRecords: mockCheckInRecords,
+    reminders: mockReminders,
+  };
+}
+
+function generateCheckInRecordsForMedicine(
+  medicine: Medicine,
+  members: Member[],
+  existingRecords: CheckInRecord[]
+): CheckInRecord[] {
+  const today = getCurrentDate();
+  if (medicine.reminderTimes.length === 0) return [];
+
+  const alreadyExists = existingRecords.filter(
+    r => r.medicineId === medicine.id && r.date === today
+  );
+
+  const newRecords: CheckInRecord[] = [];
+  for (const rt of medicine.reminderTimes) {
+    const timeAlreadyExists = alreadyExists.some(r => r.scheduledTime === rt.time);
+    if (timeAlreadyExists) continue;
+
+    if (medicine.memberIds.length > 0) {
+      for (const mid of medicine.memberIds) {
+        const member = members.find(m => m.id === mid);
+        if (member) {
+          newRecords.push({
+            id: generateId(),
+            medicineId: medicine.id,
+            medicineName: medicine.name,
+            memberId: mid,
+            memberName: member.name,
+            scheduledTime: rt.time,
+            dosage: rt.dosage,
+            status: 'pending',
+            date: today,
+          });
+        }
+      }
+    } else {
+      newRecords.push({
+        id: generateId(),
+        medicineId: medicine.id,
+        medicineName: medicine.name,
+        memberId: '',
+        memberName: '全家',
+        scheduledTime: rt.time,
+        dosage: rt.dosage,
+        status: 'pending',
+        date: today,
+      });
+    }
+  }
+  return newRecords;
+}
+
+function generateRemindersForMedicine(
+  medicine: Medicine,
+  existingReminders: ReminderItem[]
+): ReminderItem[] {
+  const today = getCurrentDate();
+  const newReminders: ReminderItem[] = [];
+
+  const expireInfo = getExpireStatus(medicine.expireDate);
+  if (expireInfo.status === 'expiring' || expireInfo.status === 'expired') {
+    const alreadyHasExpireReminder = existingReminders.some(
+      r => r.medicineId === medicine.id && r.type === 'expire'
+    );
+    if (!alreadyHasExpireReminder) {
+      newReminders.push({
+        id: generateId(),
+        type: 'expire',
+        title: expireInfo.status === 'expired' ? '药品已过期' : '药品即将到期',
+        content: `${medicine.name}${expireInfo.status === 'expired' ? '已过期' : `将于${expireInfo.days}天后到期`}，请及时处理`,
+        medicineId: medicine.id,
+        medicineName: medicine.name,
+        level: expireInfo.status === 'expired' ? 'danger' : 'warning',
+        date: today,
+        read: false,
+      });
+    }
+  }
+
+  if (medicine.stock <= medicine.minStock) {
+    const alreadyHasStockReminder = existingReminders.some(
+      r => r.medicineId === medicine.id && r.type === 'stock' && !r.read
+    );
+    if (!alreadyHasStockReminder) {
+      newReminders.push({
+        id: generateId(),
+        type: 'stock',
+        title: '库存不足提醒',
+        content: `${medicine.name}库存不足（剩余${medicine.stock}），建议及时补充`,
+        medicineId: medicine.id,
+        medicineName: medicine.name,
+        level: 'warning',
+        date: today,
+        read: false,
+      });
+    }
+  }
+
+  return newReminders;
+}
 
 interface AppState {
   members: Member[];
@@ -29,29 +181,61 @@ interface AppContextType extends AppState {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [state, setState] = useState<AppState>({
-    members: mockMembers,
-    medicines: medicinesData,
-    checkInRecords: mockCheckInRecords,
-    reminders: mockReminders
-  });
+  const [state, setState] = useState<AppState>(getInitialState);
+
+  useEffect(() => {
+    saveStorage(STORAGE_KEYS.members, state.members);
+    saveStorage(STORAGE_KEYS.medicines, state.medicines);
+    saveStorage(STORAGE_KEYS.checkInRecords, state.checkInRecords);
+    saveStorage(STORAGE_KEYS.reminders, state.reminders);
+  }, [state]);
 
   const addMedicine = useCallback((medicine: Omit<Medicine, 'id'>) => {
     const newMedicine: Medicine = { ...medicine, id: generateId() };
-    setState(prev => ({ ...prev, medicines: [newMedicine, ...prev.medicines] }));
+
+    setState(prev => {
+      const newCheckIns = generateCheckInRecordsForMedicine(newMedicine, prev.members, prev.checkInRecords);
+      const newReminders = generateRemindersForMedicine(newMedicine, prev.reminders);
+
+      console.info('[AppContext] 新增药品:', newMedicine.name,
+        '| 生成打卡记录:', newCheckIns.length,
+        '| 生成提醒:', newReminders.length);
+
+      return {
+        medicines: [newMedicine, ...prev.medicines],
+        checkInRecords: [...newCheckIns, ...prev.checkInRecords],
+        reminders: [...newReminders, ...prev.reminders],
+      };
+    });
   }, []);
 
   const updateMedicine = useCallback((id: string, data: Partial<Medicine>) => {
-    setState(prev => ({
-      ...prev,
-      medicines: prev.medicines.map(m => m.id === id ? { ...m, ...data } : m)
-    }));
+    setState(prev => {
+      const updatedMedicines = prev.medicines.map(m => m.id === id ? { ...m, ...data } : m);
+      const updatedMed = updatedMedicines.find(m => m.id === id);
+      let newReminders = prev.reminders;
+
+      if (updatedMed) {
+        const existingRemindersForMed = prev.reminders.filter(r => r.medicineId === id);
+        const freshReminders = generateRemindersForMedicine(updatedMed, existingRemindersForMed);
+        const otherReminders = prev.reminders.filter(r => r.medicineId !== id);
+        newReminders = [...freshReminders, ...otherReminders];
+      }
+
+      return {
+        ...prev,
+        medicines: updatedMedicines,
+        reminders: newReminders,
+      };
+    });
   }, []);
 
   const deleteMedicine = useCallback((id: string) => {
     setState(prev => ({
       ...prev,
-      medicines: prev.medicines.filter(m => m.id !== id)
+      medicines: prev.medicines.filter(m => m.id !== id),
+      checkInRecords: prev.checkInRecords.filter(r => r.medicineId !== id),
+      reminders: prev.reminders.filter(r => r.medicineId !== id),
     }));
   }, []);
 
@@ -73,8 +257,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               ...r,
               status,
               actualTime: (status === 'taken' || status === 'supplemented') ? getCurrentTime() : undefined,
-              note,
-              adverseReaction
+              note: note !== undefined ? note : r.note,
+              adverseReaction: adverseReaction !== undefined ? adverseReaction : r.adverseReaction
             }
           : r
       )
@@ -105,7 +289,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     cutoff.setDate(cutoff.getDate() - days);
     const cutoffStr = cutoff.toISOString().split('T')[0];
     return state.checkInRecords
-      .filter(r => r.memberId === memberId && r.date >= cutoffStr)
+      .filter(r => (r.memberId === memberId || r.memberId === '') && r.date >= cutoffStr)
       .sort((a, b) => b.date.localeCompare(a.date) || b.scheduledTime.localeCompare(a.scheduledTime));
   }, [state.checkInRecords]);
 

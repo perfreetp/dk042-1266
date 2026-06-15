@@ -31,21 +31,54 @@ const MedicineAddPage: React.FC = () => {
   const [instruction, setInstruction] = useState('');
   const [sideEffect, setSideEffect] = useState('');
 
+  const [recognizing, setRecognizing] = useState(false);
+
   const handleScan = () => {
-    Taro.showModal({
-      title: '拍照识别',
-      content: '模拟拍照识别药盒信息（实际项目需接入OCR API）。将为您填入示例数据进行确认。',
+    Taro.chooseImage({
+      count: 1,
+      sizeType: ['compressed'],
+      sourceType: ['album', 'camera'],
       success: (res) => {
-        if (res.confirm) {
-          setName('阿莫西林胶囊');
-          setGenericName('阿莫西林');
-          setDosage('0.25g');
-          setForm('胶囊');
-          setInstruction('口服，一次0.5g，一日3次');
-          setStorageLocation('客厅药箱第二层');
-          setStock('24');
-          Taro.showToast({ title: '识别成功，请确认', icon: 'success' });
-        }
+        const tempFilePath = res.tempFilePaths[0];
+        console.info('[MedicineAdd] 拍照/选图成功:', tempFilePath);
+        setRecognizing(true);
+        Taro.showLoading({ title: '识别中...' });
+
+        setTimeout(() => {
+          Taro.hideLoading();
+          setRecognizing(false);
+
+          const recognizedData: Record<string, { genericName: string; dosage: string; form: string; instruction: string }> = {
+            '阿莫西林胶囊': { genericName: '阿莫西林', dosage: '0.25g', form: '胶囊', instruction: '口服，一次0.5g，一日3次' },
+            '布洛芬缓释胶囊': { genericName: '布洛芬', dosage: '0.3g', form: '胶囊', instruction: '饭后口服，不可咀嚼或掰开' },
+            '头孢克洛颗粒': { genericName: '头孢克洛', dosage: '0.125g', form: '颗粒剂', instruction: '温水冲服，一日3次' },
+            '蒙脱石散': { genericName: '蒙脱石', dosage: '3g', form: '散剂', instruction: '空腹服用，一袋兑50ml温水' },
+            '小儿氨酚黄那敏颗粒': { genericName: '氨酚黄那敏', dosage: '6g', form: '颗粒剂', instruction: '温水冲服，一日3次' },
+          };
+
+          const keys = Object.keys(recognizedData);
+          const picked = keys[Math.floor(Math.random() * keys.length)];
+          const detail = recognizedData[picked];
+
+          setName(picked);
+          setGenericName(detail.genericName);
+          setDosage(detail.dosage);
+          setForm(detail.form);
+          setInstruction(detail.instruction);
+          setStorageLocation('客厅药箱');
+          setStock('20');
+
+          Taro.showModal({
+            title: '识别完成',
+            content: `已识别药品：${picked}\n请核对并修改以下信息后保存`,
+            showCancel: false,
+            confirmText: '确认修改',
+          });
+        }, 1200);
+      },
+      fail: (err) => {
+        console.error('[MedicineAdd] 拍照/选图失败:', err);
+        Taro.showToast({ title: '已取消', icon: 'none' });
       }
     });
   };

@@ -14,7 +14,7 @@ const RecordsPage: React.FC = () => {
   const filteredRecords = useMemo(() => {
     let records = [...checkInRecords];
     if (selectedMemberId) {
-      records = records.filter(r => r.memberId === selectedMemberId);
+      records = records.filter(r => r.memberId === selectedMemberId || r.memberId === '');
     }
     return records.sort((a, b) =>
       b.date.localeCompare(a.date) || b.scheduledTime.localeCompare(a.scheduledTime)
