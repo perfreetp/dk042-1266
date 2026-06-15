@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text } from '@tarojs/components';
 import classnames from 'classnames';
 import { ReminderItem, ReminderHandleType } from '@/types';
+import { getCurrentDate } from '@/utils';
 import styles from './index.module.scss';
 
 interface ReminderCardProps {
@@ -23,7 +24,9 @@ const handleTextMap: Record<ReminderHandleType, string> = {
 };
 
 const ReminderCard: React.FC<ReminderCardProps> = ({ reminder, onClick, onHandle }) => {
-  const isSnoozed = !!reminder.snoozedUntil && !reminder.handled;
+  const today = getCurrentDate();
+  const isSnoozed = !!reminder.snoozedUntil && !reminder.handled && reminder.snoozedUntil > today;
+  const isReactivated = !!reminder.snoozedUntil && !reminder.handled && reminder.snoozedUntil <= today;
   const isHandled = !!reminder.handled;
   const showActions = !isHandled && !isSnoozed && onHandle;
   const isStock = reminder.type === 'stock';
@@ -47,9 +50,9 @@ const ReminderCard: React.FC<ReminderCardProps> = ({ reminder, onClick, onHandle
         class: styles.statusSnoozed,
       };
     }
-    if (reminder.snoozeCount && reminder.snoozeCount > 0 && !isSnoozed) {
+    if (isReactivated || (reminder.snoozeCount && reminder.snoozeCount > 0 && !isSnoozed)) {
       return {
-        text: `🔔 第${reminder.snoozeCount + 1}次提醒`,
+        text: `🔔 第${(reminder.snoozeCount || 1) + 1}次提醒`,
         class: styles.statusRepeated,
       };
     }
@@ -74,6 +77,7 @@ const ReminderCard: React.FC<ReminderCardProps> = ({ reminder, onClick, onHandle
         <View style={{ display: 'flex', alignItems: 'center' }}>
           <Text className={styles.title}>{reminder.title}</Text>
           {!reminder.read && !isHandled && !isSnoozed && <View className={styles.unreadDot} />}
+          {isReactivated && !reminder.read && <View className={styles.unreadDot} />}
         </View>
         <Text className={classnames(styles.levelTag, styles[`level${reminder.level.charAt(0).toUpperCase() + reminder.level.slice(1)}`])}>
           {levelTextMap[reminder.level]}
@@ -95,11 +99,12 @@ const ReminderCard: React.FC<ReminderCardProps> = ({ reminder, onClick, onHandle
         </Text>
       </View>
 
-      {(reminder.operatorName || isHandled) && (
+      {(reminder.operatorName || isHandled || isSnoozed) && (
         <View className={styles.operatorRow}>
           {reminder.operatorName && (
             <Text className={styles.operator}>
-              👤 {reminder.operatorName} · {reminder.handledAt || reminder.date}
+              👤 {reminder.operatorName} · {reminder.handledAt || reminder.originalDate || reminder.date}
+              {isSnoozed && ` → 延后至${reminder.snoozedUntil}`}
             </Text>
           )}
         </View>

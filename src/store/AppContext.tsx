@@ -173,7 +173,8 @@ function isReminderVisible(r: ReminderItem): boolean {
   if (r.handled) return true;
   const today = getCurrentDate();
   if (r.snoozedUntil) {
-    return r.snoozedUntil <= today;
+    if (r.snoozedUntil <= today) return true;
+    return true;
   }
   return true;
 }
@@ -181,8 +182,22 @@ function isReminderVisible(r: ReminderItem): boolean {
 function isReminderUnread(r: ReminderItem): boolean {
   if (r.handled) return false;
   const today = getCurrentDate();
-  if (r.snoozedUntil && r.snoozedUntil > today) return false;
+  if (r.snoozedUntil) {
+    if (r.snoozedUntil > today) return false;
+    if (r.snoozedUntil <= today && !r.read) return true;
+    if (r.snoozedUntil <= today && r.read) return false;
+    return false;
+  }
   return !r.read;
+}
+
+function refreshSnoozedReminder(r: ReminderItem): ReminderItem {
+  if (r.handled || !r.snoozedUntil) return r;
+  const today = getCurrentDate();
+  if (r.snoozedUntil <= today && r.read === true) {
+    return { ...r, read: false };
+  }
+  return r;
 }
 
 interface AppState {
@@ -302,11 +317,39 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       let newReminders = prev.reminders;
       if (updatedMed) {
-        const unhandledForMed = prev.reminders.filter(r => r.medicineId === id && !r.handled && !r.snoozedUntil);
-        const handledForMed = prev.reminders.filter(r => r.medicineId === id && (r.handled || r.snoozedUntil));
-        const freshReminders = generateRemindersForMedicine(updatedMed, unhandledForMed);
+        const allForMed = prev.reminders.filter(r => r.medicineId === id);
+        const handledHistory = allForMed.filter(r => r.handled === true);
+        const snoozed = allForMed.filter(r => r.snoozedUntil !== undefined);
+        const unhandledActive = allForMed.filter(r => !r.handled && !r.snoozedUntil);
+
+        const expireInfo = getExpireStatus(updatedMed.expireDate);
+        const expireStillNeeded = expireInfo.status === 'expiring' || expireInfo.status === 'expired';
+        const stockStillNeeded = updatedMed.stock <= updatedMed.minStock;
+
+        const preservedActive: ReminderItem[] = [];
+        unhandledActive.forEach(r => {
+          if (r.type === 'expire' && expireStillNeeded) preservedActive.push(r);
+          else if (r.type === 'stock' && stockStillNeeded) preservedActive.push(r);
+        });
+
+        const stillNeededTypes = new Set(preservedActive.map(r => r.type));
+        const freshReminders = generateRemindersForMedicine(updatedMed, preservedActive);
         const otherReminders = prev.reminders.filter(r => r.medicineId !== id);
-        newReminders = [...freshReminders, ...handledForMed, ...otherReminders];
+
+        console.info('[AppContext] 更新药品提醒:',
+          '原未处理:', unhandledActive.length,
+          '保留未处理:', preservedActive.length,
+          '新增未处理:', freshReminders.length,
+          '已处理历史:', handledHistory.length,
+          '延后中的:', snoozed.length);
+
+        newReminders = [
+          ...preservedActive.filter(r => !stillNeededTypes.has(r.type) || true),
+          ...freshReminders,
+          ...snoozed,
+          ...handledHistory,
+          ...otherReminders
+        ];
       }
 
       console.info('[AppContext] 完整更新药品:', id,
@@ -383,11 +426,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           snoozeDate.setDate(snoozeDate.getDate() + snoozeDays);
           const snoozedUntil = snoozeDate.toISOString().split('T')[0];
           handled.handled = false;
-          handled.read = false;
+          handled.read = true;
           handled.snoozedUntil = snoozedUntil;
           handled.date = snoozedUntil;
-          handled.content = `${r.content}（已延后${snoozeDays}天，第${(r.snoozeCount || 0) + 1}次延后）`;
-          handled.title = r.title.replace('（', '（再次');
+          handled.title = r.snoozeCount ? r.title : r.title.replace('（', '（再次');
+          handled.content = `${r.content}（第${(r.snoozeCount || 0) + 1}次延后，${snoozedUntil}后继续提醒）`;
         }
 
         return handled;
@@ -560,26 +603,49 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [state.members, getMemberRecords, getMemberMedicines]);
 
   const getVisibleReminders = useCallback((): ReminderItem[] => {
-    return state.reminders.filter(isReminderVisible);
+    const today = getCurrentDate();
+    const needsRefresh = state.reminders.some(r =>
+      !r.handled && r.snoozedUntil && r.snoozedUntil <= today && r.read === true
+    );
+    if (needsRefresh) {
+      console.info('[AppContext] 延后到期自动刷新提醒状态');
+      void today;
+    }
+    return state.reminders
+      .map(refreshSnoozedReminder)
+      .filter(isReminderVisible);
+  }, [state.reminders]);
+
+  const getUnreadRemindersCount = useCallback((): number => {
+    return state.reminders
+      .map(refreshSnoozedReminder)
+      .filter(isReminderUnread).length;
   }, [state.reminders]);
 
   const markReminderRead = useCallback((id: string) => {
     setState(prev => ({
       ...prev,
-      reminders: prev.reminders.map(r => r.id === id ? { ...r, read: true } : r)
+      reminders: prev.reminders.map(r => {
+        if (r.id !== id) return r;
+        if (r.snoozedUntil && r.snoozedUntil > getCurrentDate()) return r;
+        return { ...r, read: true };
+      })
     }));
   }, []);
 
   const markAllRemindersRead = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      reminders: prev.reminders.map(r => ({ ...r, read: true }))
-    }));
+    setState(prev => {
+      const today = getCurrentDate();
+      return {
+        ...prev,
+        reminders: prev.reminders.map(r => {
+          if (r.handled) return r;
+          if (r.snoozedUntil && r.snoozedUntil > today) return r;
+          return { ...r, read: true };
+        })
+      };
+    });
   }, []);
-
-  const getUnreadRemindersCount = useCallback((): number => {
-    return state.reminders.filter(isReminderUnread).length;
-  }, [state.reminders]);
 
   return (
     <AppContext.Provider
