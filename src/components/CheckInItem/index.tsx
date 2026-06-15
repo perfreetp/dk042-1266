@@ -7,12 +7,13 @@ import styles from './index.module.scss';
 
 interface CheckInItemProps {
   record: CheckInRecord;
+  selected?: boolean;
   onTake?: () => void;
   onMiss?: () => void;
   onSupplement?: () => void;
 }
 
-const CheckInItem: React.FC<CheckInItemProps> = ({ record, onTake, onMiss, onSupplement }) => {
+const CheckInItem: React.FC<CheckInItemProps> = ({ record, selected, onTake, onMiss, onSupplement }) => {
   const statusClassMap = {
     pending: styles.statusPending,
     taken: styles.statusTaken,
@@ -21,7 +22,7 @@ const CheckInItem: React.FC<CheckInItemProps> = ({ record, onTake, onMiss, onSup
   };
 
   return (
-    <View className={styles.checkInItem}>
+    <View className={classnames(styles.checkInItem, { [styles.selected]: selected })}>
       <View className={styles.header}>
         <View className={styles.timeRow}>
           <Text className={styles.time}>{record.scheduledTime}</Text>

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import Taro from '@tarojs/taro';
-import { Member, Medicine, CheckInRecord, ReminderItem, DailyStat } from '@/types';
+import { Member, Medicine, CheckInRecord, ReminderItem, DailyStat, ReminderHandleType } from '@/types';
 import { mockMembers } from '@/data/members';
 import { mockMedicines as medicinesData } from '@/data/medicines';
 import { mockCheckInRecords, mockReminders } from '@/data/records';
@@ -118,7 +118,7 @@ function generateRemindersForMedicine(
   const expireInfo = getExpireStatus(medicine.expireDate);
   if (expireInfo.status === 'expiring' || expireInfo.status === 'expired') {
     const alreadyHasExpireReminder = existingReminders.some(
-      r => r.medicineId === medicine.id && r.type === 'expire'
+      r => r.medicineId === medicine.id && r.type === 'expire' && !r.handled
     );
     if (!alreadyHasExpireReminder) {
       newReminders.push({
@@ -137,7 +137,7 @@ function generateRemindersForMedicine(
 
   if (medicine.stock <= medicine.minStock) {
     const alreadyHasStockReminder = existingReminders.some(
-      r => r.medicineId === medicine.id && r.type === 'stock' && !r.read
+      r => r.medicineId === medicine.id && r.type === 'stock' && !r.handled
     );
     if (!alreadyHasStockReminder) {
       newReminders.push({
@@ -167,15 +167,18 @@ interface AppState {
 interface AppContextType extends AppState {
   addMedicine: (medicine: Omit<Medicine, 'id'>) => void;
   updateMedicine: (id: string, data: Partial<Medicine>) => void;
+  updateMedicineFull: (id: string, data: Partial<Medicine>) => void;
   deleteMedicine: (id: string) => void;
   addMember: (member: Omit<Member, 'id' | 'avatar'>) => void;
   updateCheckIn: (id: string, status: CheckInRecord['status'], note?: string, adverseReaction?: string) => void;
+  handleReminder: (id: string, handleType: ReminderHandleType, snoozeDays?: number) => void;
   getTodayRecords: () => CheckInRecord[];
   getTodayStats: () => DailyStat;
   getMemberMedicines: (memberId: string) => Medicine[];
   getMemberRecords: (memberId: string, days?: number) => CheckInRecord[];
   markReminderRead: (id: string) => void;
   getUnreadRemindersCount: () => number;
+  markAllRemindersRead: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -202,6 +205,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         '| 生成提醒:', newReminders.length);
 
       return {
+        ...prev,
+        members: prev.members,
         medicines: [newMedicine, ...prev.medicines],
         checkInRecords: [...newCheckIns, ...prev.checkInRecords],
         reminders: [...newReminders, ...prev.reminders],
@@ -217,14 +222,57 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
       if (updatedMed) {
         const existingRemindersForMed = prev.reminders.filter(r => r.medicineId === id);
-        const freshReminders = generateRemindersForMedicine(updatedMed, existingRemindersForMed);
+        const unhandledForMed = existingRemindersForMed.filter(r => !r.handled);
+        const handledForMed = existingRemindersForMed.filter(r => r.handled);
+        const freshReminders = generateRemindersForMedicine(updatedMed, unhandledForMed);
         const otherReminders = prev.reminders.filter(r => r.medicineId !== id);
-        newReminders = [...freshReminders, ...otherReminders];
+        newReminders = [...freshReminders, ...handledForMed, ...otherReminders];
       }
 
       return {
         ...prev,
         medicines: updatedMedicines,
+        reminders: newReminders,
+      };
+    });
+  }, []);
+
+  const updateMedicineFull = useCallback((id: string, data: Partial<Medicine>) => {
+    setState(prev => {
+      const updatedMedicines = prev.medicines.map(m => m.id === id ? { ...m, ...data } : m);
+      const updatedMed = updatedMedicines.find(m => m.id === id);
+
+      const today = getCurrentDate();
+      const otherRecords = prev.checkInRecords.filter(
+        r => !(r.medicineId === id && r.date === today && r.status === 'pending')
+      );
+
+      let newCheckIns = otherRecords;
+      if (updatedMed) {
+        const generated = generateCheckInRecordsForMedicine(updatedMed, prev.members, otherRecords);
+        const existingTodayNonPending = prev.checkInRecords.filter(
+          r => r.medicineId === id && r.date === today && r.status !== 'pending'
+        );
+        newCheckIns = [...existingTodayNonPending, ...generated, ...otherRecords];
+      }
+
+      let newReminders = prev.reminders;
+      if (updatedMed) {
+        const unhandledForMed = prev.reminders.filter(r => r.medicineId === id && !r.handled);
+        const handledForMed = prev.reminders.filter(r => r.medicineId === id && r.handled);
+        const freshReminders = generateRemindersForMedicine(updatedMed, unhandledForMed);
+        const otherReminders = prev.reminders.filter(r => r.medicineId !== id);
+        newReminders = [...freshReminders, ...handledForMed, ...otherReminders];
+      }
+
+      console.info('[AppContext] 完整更新药品:', id,
+        '| 今日打卡记录:', prev.checkInRecords.filter(r => r.medicineId === id && r.date === today).length,
+        '->', newCheckIns.filter(r => r.medicineId === id && r.date === today).length);
+
+      return {
+        ...prev,
+        medicines: updatedMedicines,
+        checkInRecords: newCheckIns,
         reminders: newReminders,
       };
     });
@@ -265,6 +313,54 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   }, []);
 
+  const handleReminder = useCallback((id: string, handleType: ReminderHandleType, snoozeDays: number = 3) => {
+    setState(prev => {
+      const reminders = prev.reminders.map(r => {
+        if (r.id !== id) return r;
+
+        const handled: ReminderItem = {
+          ...r,
+          handled: true,
+          handledAt: getCurrentDate(),
+          handleType,
+          read: true,
+        };
+
+        if (handleType === 'snooze') {
+          const snoozeDate = new Date();
+          snoozeDate.setDate(snoozeDate.getDate() + snoozeDays);
+          handled.date = snoozeDate.toISOString().split('T')[0];
+          handled.handled = false;
+          handled.read = false;
+          handled.content = `${r.content}（已延后${snoozeDays}天）`;
+        }
+
+        return handled;
+      });
+
+      let medicines = prev.medicines;
+      const reminder = prev.reminders.find(r => r.id === id);
+      if (reminder && handleType === 'restocked' && reminder.type === 'stock') {
+        medicines = prev.medicines.map(m =>
+          m.id === reminder.medicineId
+            ? { ...m, stock: Math.max(m.minStock * 5, 20) }
+            : m
+        );
+      }
+      if (reminder && handleType === 'discarded' && reminder.type === 'expire') {
+        medicines = prev.medicines.filter(m => m.id !== reminder.medicineId);
+      }
+
+      console.info('[AppContext] 处理提醒:', id, '类型:', handleType);
+
+      return {
+        ...prev,
+        reminders,
+        medicines,
+      };
+    });
+  }, []);
+
   const getTodayRecords = useCallback((): CheckInRecord[] => {
     const today = getCurrentDate();
     return state.checkInRecords.filter(r => r.date === today);
@@ -300,8 +396,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   }, []);
 
+  const markAllRemindersRead = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      reminders: prev.reminders.map(r => ({ ...r, read: true }))
+    }));
+  }, []);
+
   const getUnreadRemindersCount = useCallback((): number => {
-    return state.reminders.filter(r => !r.read).length;
+    return state.reminders.filter(r => !r.read && !r.handled).length;
   }, [state.reminders]);
 
   return (
@@ -310,15 +413,18 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         ...state,
         addMedicine,
         updateMedicine,
+        updateMedicineFull,
         deleteMedicine,
         addMember,
         updateCheckIn,
+        handleReminder,
         getTodayRecords,
         getTodayStats,
         getMemberMedicines,
         getMemberRecords,
         markReminderRead,
-        getUnreadRemindersCount
+        getUnreadRemindersCount,
+        markAllRemindersRead
       }}
     >
       {children}

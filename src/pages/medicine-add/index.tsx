@@ -32,6 +32,7 @@ const MedicineAddPage: React.FC = () => {
   const [sideEffect, setSideEffect] = useState('');
 
   const [recognizing, setRecognizing] = useState(false);
+  void recognizing;
 
   const handleScan = () => {
     Taro.chooseImage({

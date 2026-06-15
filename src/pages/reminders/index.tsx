@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { View, Text, ScrollView } from '@tarojs/components';
+import { View, Text, ScrollView, Button } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import { useApp } from '@/store/AppContext';
@@ -7,12 +7,13 @@ import StatCard from '@/components/StatCard';
 import ReminderCard from '@/components/ReminderCard';
 import MedicineCard from '@/components/MedicineCard';
 import { getExpireStatus } from '@/utils';
+import { ReminderHandleType } from '@/types';
 import styles from './index.module.scss';
 
 type TabType = 'all' | 'expire' | 'stock';
 
 const RemindersPage: React.FC = () => {
-  const { reminders, medicines, markReminderRead, getUnreadRemindersCount } = useApp();
+  const { reminders, medicines, markReminderRead, getUnreadRemindersCount, handleReminder, markAllRemindersRead } = useApp();
   const [activeTab, setActiveTab] = useState<TabType>('all');
 
   const unreadCount = useMemo(() => getUnreadRemindersCount(), [getUnreadRemindersCount]);
@@ -29,23 +30,69 @@ const RemindersPage: React.FC = () => {
   }, [medicines]);
 
   const filteredReminders = useMemo(() => {
-    const sorted = [...reminders].sort((a, b) => b.date.localeCompare(a.date));
+    const sorted = [...reminders].sort((a, b) => {
+      if (!!a.handled !== !!b.handled) return a.handled ? 1 : -1;
+      return b.date.localeCompare(a.date);
+    });
     if (activeTab === 'all') return sorted;
     return sorted.filter(r => r.type === activeTab);
   }, [reminders, activeTab]);
 
   const unreadExpire = useMemo(
-    () => reminders.filter(r => !r.read && r.type === 'expire').length,
+    () => reminders.filter(r => !r.read && !r.handled && r.type === 'expire').length,
     [reminders]
   );
 
   const unreadStock = useMemo(
-    () => reminders.filter(r => !r.read && r.type === 'stock').length,
+    () => reminders.filter(r => !r.read && !r.handled && r.type === 'stock').length,
     [reminders]
   );
 
   const handleReminderClick = (reminderId: string) => {
     markReminderRead(reminderId);
+  };
+
+  const handleAction = (reminderId: string, type: ReminderHandleType) => {
+    const reminder = reminders.find(r => r.id === reminderId);
+    let confirmMsg = '';
+    switch (type) {
+      case 'restocked':
+        confirmMsg = `确认补货成功？系统将自动补满库存。`;
+        break;
+      case 'discarded':
+        confirmMsg = `确认已丢弃处理该过期药品？系统将从药箱中移除。`;
+        break;
+      case 'snooze':
+        confirmMsg = `确认延后3天再提醒？`;
+        break;
+    }
+    Taro.showModal({
+      title: '确认处理',
+      content: confirmMsg,
+      success: (res) => {
+        if (res.confirm) {
+          handleReminder(reminderId, type, 3);
+          Taro.showToast({
+            title: type === 'restocked' ? '已标记补货' : type === 'discarded' ? '已处理丢弃' : '已延后提醒',
+            icon: 'success',
+          });
+        }
+      }
+    });
+  };
+
+  const handleMarkAllRead = () => {
+    if (unreadCount === 0) return;
+    Taro.showModal({
+      title: '全部已读',
+      content: `将 ${unreadCount} 条未读提醒标记为已读？`,
+      success: (res) => {
+        if (res.confirm) {
+          markAllRemindersRead();
+          Taro.showToast({ title: '已全部标记', icon: 'success' });
+        }
+      }
+    });
   };
 
   const handleMedicineClick = (medicineId: string) => {
@@ -55,8 +102,15 @@ const RemindersPage: React.FC = () => {
   return (
     <ScrollView className={styles.container} scrollY>
       <View className={styles.header}>
-        <Text className={styles.title}>到期提醒</Text>
-        <Text className={styles.subtitle}>及时处理，守护家人健康</Text>
+        <View>
+          <Text className={styles.title}>到期提醒</Text>
+          <Text className={styles.subtitle}>及时处理，守护家人健康</Text>
+        </View>
+        {unreadCount > 0 && (
+          <Button className={styles.markAllBtn} onClick={handleMarkAllRead}>
+            全部已读
+          </Button>
+        )}
       </View>
 
       <View className={styles.statsRow}>
@@ -137,6 +191,7 @@ const RemindersPage: React.FC = () => {
               key={reminder.id}
               reminder={reminder}
               onClick={() => handleReminderClick(reminder.id)}
+              onHandle={(type) => handleAction(reminder.id, type)}
             />
           ))
         ) : (

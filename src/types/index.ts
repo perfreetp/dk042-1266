@@ -49,6 +49,8 @@ export interface CheckInRecord {
   date: string;
 }
 
+export type ReminderHandleType = 'restocked' | 'discarded' | 'snooze';
+
 export interface ReminderItem {
   id: string;
   type: 'expire' | 'stock' | 'dose';
@@ -59,6 +61,9 @@ export interface ReminderItem {
   level: 'warning' | 'danger' | 'info';
   date: string;
   read: boolean;
+  handled?: boolean;
+  handledAt?: string;
+  handleType?: ReminderHandleType;
 }
 
 export interface DailyStat {

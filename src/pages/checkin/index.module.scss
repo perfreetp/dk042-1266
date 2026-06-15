@@ -62,6 +62,108 @@
   margin-bottom: $spacing-md;
 }
 
+.filterSection {
+  margin-bottom: $spacing-md;
+}
+
+.filterLabel {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  padding-left: 4rpx;
+}
+
+.memberChipRow {
+  display: flex;
+  gap: $spacing-sm;
+  padding-bottom: $spacing-xs;
+  white-space: nowrap;
+}
+
+.memberChip {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-sm $spacing-lg;
+  border-radius: $radius-button;
+  background: $color-bg-card;
+  border: 2rpx solid $color-divider;
+  margin-right: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.memberChipLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+.memberChipActive {
+  background: $color-primary-bg;
+  border-color: $color-primary;
+
+  .memberChipLabel {
+    color: $color-primary-dark;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.memberChipBadge {
+  margin-left: $spacing-sm;
+  background: $color-warning;
+  color: #fff;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  min-width: 32rpx;
+  height: 32rpx;
+  line-height: 32rpx;
+  text-align: center;
+  padding: 0 8rpx;
+  border-radius: 16rpx;
+}
+
+.timeSlotRow {
+  display: flex;
+  gap: $spacing-sm;
+  background: $color-bg-card;
+  padding: 6rpx;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-card;
+}
+
+.timeSlot {
+  flex: 1;
+  text-align: center;
+  padding: $spacing-sm $spacing-xs;
+  border-radius: $radius-md;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.timeSlotActive {
+  background: $color-primary;
+  color: $color-text-white;
+  font-weight: $font-weight-semibold;
+}
+
+.filterSummary {
+  background: $color-primary-bg;
+  border-radius: $radius-md;
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.filterSummaryText {
+  font-size: $font-size-sm;
+  color: $color-primary-dark;
+  font-weight: $font-weight-medium;
+}
+
 .checkInList {
   margin-bottom: $spacing-md;
 }

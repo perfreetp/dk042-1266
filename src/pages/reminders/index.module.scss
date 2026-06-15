@@ -7,6 +7,10 @@
 
 .header {
   margin-bottom: $spacing-lg;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: $spacing-md;
 }
 
 .title {
@@ -19,6 +23,27 @@
   font-size: $font-size-sm;
   color: $color-text-secondary;
   margin-top: $spacing-xs;
+}
+
+.markAllBtn {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  @include button-reset;
+  padding: 0 $spacing-lg;
+  height: $button-height-md;
+  background: $color-primary-bg;
+  color: $color-primary-dark;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  flex-shrink: 0;
+
+  &:active {
+    opacity: 0.9;
+    transform: scale(0.98);
+    transition: all $transition-base;
+  }
 }
 
 .tabs {

@@ -6,6 +6,13 @@
   padding: $spacing-lg;
   margin-bottom: $spacing-md;
   box-shadow: $shadow-card;
+  border: 2rpx solid transparent;
+  transition: all $transition-base;
+}
+
+.checkInItem.selected {
+  border-color: $color-primary;
+  box-shadow: $shadow-primary;
 }
 
 .header {

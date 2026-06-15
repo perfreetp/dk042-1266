@@ -64,11 +64,131 @@
   box-shadow: $shadow-card;
 }
 
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
 .sectionTitle {
   font-size: $font-size-lg;
   font-weight: $font-weight-semibold;
   color: $color-text-primary;
-  margin-bottom: $spacing-md;
+}
+
+.editHint {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  background: $color-primary-bg;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-sm;
+}
+
+.editHintSub {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: $spacing-sm;
+  padding-left: $spacing-sm;
+}
+
+.editInput {
+  flex: 1;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  border: 1rpx solid $color-primary;
+  border-radius: $radius-sm;
+  padding: 4rpx 12rpx;
+  background: rgba($color-primary, 0.05);
+}
+
+.editInputSm {
+  width: 100rpx;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  border: 1rpx solid $color-primary;
+  border-radius: $radius-sm;
+  padding: 4rpx 12rpx;
+  text-align: center;
+  background: rgba($color-primary, 0.05);
+}
+
+.stockEditRow {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.stockUnit {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.memberEditList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.memberEditItem {
+  padding: $spacing-sm $spacing-lg;
+  border-radius: $radius-button;
+  background: $color-bg-card;
+  color: $color-text-secondary;
+  font-size: $font-size-sm;
+  border: 2rpx solid $color-divider;
+}
+
+.memberEditItemActive {
+  background: $color-primary-bg;
+  color: $color-primary-dark;
+  border-color: $color-primary;
+  font-weight: $font-weight-semibold;
+}
+
+.addBtn {
+  font-size: $font-size-sm;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  background: $color-primary-bg;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-sm;
+}
+
+.timeInput {
+  width: 140rpx;
+  font-size: $font-size-lg;
+  color: $color-primary;
+  border: 1rpx solid $color-primary;
+  border-radius: $radius-sm;
+  padding: 4rpx 12rpx;
+  background: rgba($color-primary, 0.05);
+  font-weight: $font-weight-semibold;
+}
+
+.dosageInput {
+  flex: 1;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  border: 1rpx solid $color-primary;
+  border-radius: $radius-sm;
+  padding: 4rpx 12rpx;
+  background: rgba($color-primary, 0.05);
+}
+
+.removeBtn {
+  font-size: $font-size-xs;
+  color: $color-error;
+  padding: 4rpx 12rpx;
+  background: rgba($color-error, 0.1);
+  border-radius: $radius-sm;
+}
+
+.btnPrimary {
+  background: $color-primary;
+  color: $color-text-white;
+  box-shadow: $shadow-primary;
 }
 
 .infoRow {

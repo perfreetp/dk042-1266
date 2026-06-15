@@ -7,11 +7,17 @@
   margin-bottom: $spacing-md;
   box-shadow: $shadow-card;
   border-left: 6rpx solid $color-info;
+  transition: all $transition-base;
 
   &:active {
     background: $color-bg-hover;
     transition: all $transition-base;
   }
+}
+
+.reminderCard.handled {
+  opacity: 0.65;
+  border-left-style: dashed;
 }
 
 .warning {
@@ -75,8 +81,61 @@
   line-height: $line-height-normal;
 }
 
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: $spacing-sm;
+}
+
 .date {
   font-size: $font-size-sm;
   color: $color-text-tertiary;
-  margin-top: $spacing-sm;
+}
+
+.handleBadge {
+  color: $color-success;
+  font-weight: $font-weight-semibold;
+}
+
+.actionRow {
+  display: flex;
+  gap: $spacing-sm;
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 1rpx dashed $color-divider;
+  flex-wrap: wrap;
+}
+
+.actionBtn {
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-button;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  flex: 1;
+  min-width: 180rpx;
+  text-align: center;
+
+  &:active {
+    opacity: 0.85;
+    transform: scale(0.98);
+    transition: all $transition-base;
+  }
+}
+
+.actionSuccess {
+  background: rgba($color-success, 0.1);
+  color: $color-success;
+  font-weight: $font-weight-semibold;
+}
+
+.actionDanger {
+  background: rgba($color-error, 0.1);
+  color: $color-error;
+  font-weight: $font-weight-semibold;
+}
+
+.actionSecondary {
+  background: $color-bg-hover;
+  color: $color-text-secondary;
 }
