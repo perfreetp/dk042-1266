@@ -51,10 +51,22 @@
   margin-bottom: $spacing-md;
 }
 
+.memberHeaderInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.expandIcon {
+  font-size: $font-size-sm;
+  color: $color-text-tertiary;
+  flex-shrink: 0;
+}
+
 .avatar {
   width: 80rpx;
   height: 80rpx;
   border-radius: $radius-round;
+  flex-shrink: 0;
 }
 
 .memberName {
@@ -63,10 +75,98 @@
   color: $color-text-primary;
 }
 
+.adherenceBadge {
+  margin-left: $spacing-sm;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  flex-shrink: 0;
+}
+
 .memberInfo {
   font-size: $font-size-sm;
   color: $color-text-secondary;
   margin-top: 4rpx;
+}
+
+.memberStats {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  margin-top: 4rpx;
+}
+
+.warningBox {
+  background: rgba(239, 68, 68, 0.05);
+  border: 1rpx solid rgba(239, 68, 68, 0.2);
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+}
+
+.warningTitle {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-error;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.warningItem {
+  display: block;
+  font-size: $font-size-sm;
+  line-height: $line-height-relaxed;
+  margin-bottom: $spacing-xs;
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.warningDanger { color: $color-error; }
+.warningWarning { color: $color-warning; }
+
+.sectionSub {
+  margin-top: $spacing-md;
+  padding-top: $spacing-md;
+  border-top: 1rpx dashed $color-divider;
+
+  &:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+  }
+}
+
+.sectionSubTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-sm;
+  display: block;
+}
+
+.adverseItem {
+  display: block;
+  font-size: $font-size-sm;
+  color: $color-error;
+  line-height: $line-height-relaxed;
+  margin-bottom: $spacing-xs;
+  padding-left: $spacing-md;
+  position: relative;
+
+  &:before {
+    content: '•';
+    position: absolute;
+    left: 0;
+    color: $color-error;
+  }
+
+  &:last-child { margin-bottom: 0; }
+}
+
+.missedDates {
+  font-size: $font-size-sm;
+  color: $color-warning;
+  line-height: $line-height-relaxed;
 }
 
 .medicineList {
@@ -82,10 +182,25 @@
   }
 }
 
+.medicineHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
 .medicineName {
   font-size: $font-size-md;
   font-weight: $font-weight-medium;
   color: $color-text-primary;
+  flex: 1;
+}
+
+.medicineAdherence {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-bold;
+  flex-shrink: 0;
+  margin-left: $spacing-sm;
 }
 
 .medicineDetail {
@@ -93,6 +208,29 @@
   color: $color-text-secondary;
   margin-top: $spacing-xs;
   line-height: $line-height-normal;
+}
+
+.medicineStatsRow {
+  display: flex;
+  gap: $spacing-lg;
+  margin-top: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 1rpx dashed $color-divider;
+}
+
+.medicineStat {
+  font-size: $font-size-xs;
+  color: $color-success;
+  font-weight: $font-weight-medium;
+}
+
+.riskItem {
+  display: block;
+  font-size: $font-size-sm;
+  line-height: $line-height-relaxed;
+  margin-bottom: $spacing-xs;
+
+  &:last-child { margin-bottom: 0; }
 }
 
 .footer {

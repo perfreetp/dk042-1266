@@ -8,7 +8,8 @@ export default defineAppConfig({
     'pages/medicine-add/index',
     'pages/medicine-detail/index',
     'pages/member-add/index',
-    'pages/prescription/index'
+    'pages/prescription/index',
+    'pages/calendar/index'
   ],
   window: {
     backgroundTextStyle: 'light',

@@ -31,9 +31,6 @@ const MedicineAddPage: React.FC = () => {
   const [instruction, setInstruction] = useState('');
   const [sideEffect, setSideEffect] = useState('');
 
-  const [recognizing, setRecognizing] = useState(false);
-  void recognizing;
-
   const handleScan = () => {
     Taro.chooseImage({
       count: 1,
@@ -42,12 +39,10 @@ const MedicineAddPage: React.FC = () => {
       success: (res) => {
         const tempFilePath = res.tempFilePaths[0];
         console.info('[MedicineAdd] 拍照/选图成功:', tempFilePath);
-        setRecognizing(true);
         Taro.showLoading({ title: '识别中...' });
 
         setTimeout(() => {
           Taro.hideLoading();
-          setRecognizing(false);
 
           const recognizedData: Record<string, { genericName: string; dosage: string; form: string; instruction: string }> = {
             '阿莫西林胶囊': { genericName: '阿莫西林', dosage: '0.25g', form: '胶囊', instruction: '口服，一次0.5g，一日3次' },

@@ -89,6 +89,13 @@
   margin-top: $spacing-xs;
 }
 
+.operator {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  margin-top: $spacing-xs;
+  font-weight: $font-weight-medium;
+}
+
 .actions {
   display: flex;
   gap: $spacing-sm;

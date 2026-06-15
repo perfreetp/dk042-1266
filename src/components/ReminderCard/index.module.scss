@@ -81,6 +81,12 @@
   line-height: $line-height-normal;
 }
 
+.reminderCard.snoozed {
+  opacity: 0.75;
+  border-left-style: dotted;
+  background: rgba(245, 158, 11, 0.03);
+}
+
 .footer {
   display: flex;
   justify-content: space-between;
@@ -93,9 +99,43 @@
   color: $color-text-tertiary;
 }
 
-.handleBadge {
+.statusRow {
+  margin-top: $spacing-sm;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 4rpx 12rpx;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+}
+
+.statusDone {
+  background: rgba($color-success, 0.1);
   color: $color-success;
-  font-weight: $font-weight-semibold;
+}
+
+.statusSnoozed {
+  background: rgba($color-warning, 0.1);
+  color: $color-warning;
+}
+
+.statusRepeated {
+  background: rgba($color-info, 0.1);
+  color: $color-info;
+}
+
+.operatorRow {
+  margin-top: $spacing-sm;
+  padding-top: $spacing-sm;
+  border-top: 1rpx dashed $color-divider;
+}
+
+.operator {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  font-weight: $font-weight-medium;
 }
 
 .actionRow {

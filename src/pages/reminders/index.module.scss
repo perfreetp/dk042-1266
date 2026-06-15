@@ -25,6 +25,12 @@
   margin-top: $spacing-xs;
 }
 
+.switchOp {
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  margin-left: 4rpx;
+}
+
 .markAllBtn {
   display: flex !important;
   align-items: center;

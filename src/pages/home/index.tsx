@@ -13,7 +13,10 @@ const HomePage: React.FC = () => {
     getTodayStats,
     getUnreadRemindersCount,
     medicines,
-    updateCheckIn
+    updateCheckIn,
+    members,
+    operator,
+    setOperator
   } = useApp();
 
   const todayRecords = useMemo(() => getTodayRecords(), [getTodayRecords]);
@@ -65,11 +68,29 @@ const HomePage: React.FC = () => {
     Taro.switchTab({ url });
   };
 
+  const switchOperator = () => {
+    const memberOptions = members.map(m => `${m.name}（${m.relation}）`);
+    Taro.showActionSheet({
+      itemList: memberOptions,
+      success: (res) => {
+        const member = members[res.tapIndex];
+        setOperator(member);
+        Taro.showToast({ title: `当前操作人：${member.name}`, icon: 'none' });
+      }
+    });
+  };
+
   return (
     <ScrollView className={styles.container} scrollY>
       <View className={styles.header}>
-        <Text className={styles.greeting}>今天是个好日子 👋</Text>
-        <Text className={styles.title}>家庭药箱</Text>
+        <View>
+          <Text className={styles.greeting}>今天是个好日子 👋</Text>
+          <Text className={styles.title}>家庭药箱</Text>
+        </View>
+        <View className={styles.operatorBadge} onClick={switchOperator}>
+          <Text className={styles.operatorName}>操作人：{operator.name}</Text>
+          <Text className={styles.operatorSwitch}>切换</Text>
+        </View>
       </View>
 
       <View className={styles.statsRow}>
@@ -105,6 +126,20 @@ const HomePage: React.FC = () => {
             🔔{unreadCount > 0 && <Text style={{ color: '#EF4444', fontSize: '20rpx' }}> {unreadCount}</Text>}
           </View>
           <Text className={styles.actionLabel}>提醒中心</Text>
+        </View>
+        <View
+          className={styles.actionCard}
+          onClick={() => handleNavigate('/pages/calendar/index')}
+        >
+          <View className={classnames(styles.actionIcon, styles.actionIconInfo)}>📅</View>
+          <Text className={styles.actionLabel}>服药日历</Text>
+        </View>
+        <View
+          className={styles.actionCard}
+          onClick={() => handleNavigate('/pages/prescription/index')}
+        >
+          <View className={classnames(styles.actionIcon, styles.actionIconWarn)}>📋</View>
+          <Text className={styles.actionLabel}>用药清单</Text>
         </View>
       </View>
 

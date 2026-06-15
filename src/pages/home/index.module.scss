@@ -7,6 +7,35 @@
 
 .header {
   margin-bottom: $spacing-lg;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: $spacing-md;
+}
+
+.operatorBadge {
+  background: $color-bg-card;
+  padding: $spacing-sm $spacing-md;
+  border-radius: $radius-button;
+  box-shadow: $shadow-card;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-shrink: 0;
+}
+
+.operatorName {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.operatorSwitch {
+  font-size: $font-size-xs;
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  padding: 4rpx 12rpx;
+  background: $color-primary-bg;
+  border-radius: $radius-sm;
 }
 
 .greeting {
@@ -45,7 +74,7 @@
 
 .quickActions {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: $spacing-md;
   margin-bottom: $spacing-lg;
 }

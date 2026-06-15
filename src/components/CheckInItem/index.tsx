@@ -46,6 +46,11 @@ const CheckInItem: React.FC<CheckInItemProps> = ({ record, selected, onTake, onM
           {record.adverseReaction && (
             <Text className={styles.actualTime}>不适反应: {record.adverseReaction}</Text>
           )}
+          {record.operatorName && (
+            <Text className={styles.operator}>
+              {record.operatedAt} · {record.operatorName} 操作
+            </Text>
+          )}
         </View>
         {record.status === 'pending' && (
           <View className={styles.actions}>

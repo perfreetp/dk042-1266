@@ -13,10 +13,15 @@ import styles from './index.module.scss';
 type TabType = 'all' | 'expire' | 'stock';
 
 const RemindersPage: React.FC = () => {
-  const { reminders, medicines, markReminderRead, getUnreadRemindersCount, handleReminder, markAllRemindersRead } = useApp();
+  const {
+    reminders, medicines, members, operator, setOperator,
+    markReminderRead, getUnreadRemindersCount, handleReminder,
+    markAllRemindersRead, getVisibleReminders
+  } = useApp();
   const [activeTab, setActiveTab] = useState<TabType>('all');
 
   const unreadCount = useMemo(() => getUnreadRemindersCount(), [getUnreadRemindersCount]);
+  const visibleReminders = useMemo(() => getVisibleReminders(), [getVisibleReminders]);
 
   const expiringMedicines = useMemo(() => {
     return medicines
@@ -30,22 +35,22 @@ const RemindersPage: React.FC = () => {
   }, [medicines]);
 
   const filteredReminders = useMemo(() => {
-    const sorted = [...reminders].sort((a, b) => {
+    const sorted = [...visibleReminders].sort((a, b) => {
       if (!!a.handled !== !!b.handled) return a.handled ? 1 : -1;
       return b.date.localeCompare(a.date);
     });
     if (activeTab === 'all') return sorted;
     return sorted.filter(r => r.type === activeTab);
-  }, [reminders, activeTab]);
+  }, [visibleReminders, activeTab]);
 
   const unreadExpire = useMemo(
-    () => reminders.filter(r => !r.read && !r.handled && r.type === 'expire').length,
-    [reminders]
+    () => visibleReminders.filter(r => !r.read && !r.handled && r.type === 'expire').length,
+    [visibleReminders]
   );
 
   const unreadStock = useMemo(
-    () => reminders.filter(r => !r.read && !r.handled && r.type === 'stock').length,
-    [reminders]
+    () => visibleReminders.filter(r => !r.read && !r.handled && r.type === 'stock').length,
+    [visibleReminders]
   );
 
   const handleReminderClick = (reminderId: string) => {
@@ -99,12 +104,27 @@ const RemindersPage: React.FC = () => {
     Taro.navigateTo({ url: `/pages/medicine-detail/index?id=${medicineId}` });
   };
 
+  const switchOperator = () => {
+    const memberOptions = members.map(m => `${m.name}（${m.relation}）`);
+    Taro.showActionSheet({
+      itemList: memberOptions,
+      success: (res) => {
+        const member = members[res.tapIndex];
+        setOperator(member);
+        Taro.showToast({ title: `当前操作人：${member.name}`, icon: 'none' });
+      }
+    });
+  };
+
   return (
     <ScrollView className={styles.container} scrollY>
       <View className={styles.header}>
         <View>
           <Text className={styles.title}>到期提醒</Text>
-          <Text className={styles.subtitle}>及时处理，守护家人健康</Text>
+          <Text className={styles.subtitle}>
+            及时处理，守护家人健康 · 当前操作人：{operator.name}
+            <Text className={styles.switchOp} onClick={switchOperator}> 切换</Text>
+          </Text>
         </View>
         {unreadCount > 0 && (
           <Button className={styles.markAllBtn} onClick={handleMarkAllRead}>
